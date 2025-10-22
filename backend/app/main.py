@@ -12,12 +12,10 @@ logger = logging.getLogger(__name__)
 
 @app.on_event("startup")
 async def startup_event():
-    """Load the ML models on server startup."""
-    logger.info("Server starting up, loading models...")
-    # --- ONLY load the transcriber model ---
-    # load_summarizer_model() 
-    load_transcriber_model()
-    logger.info("Models loaded successfully.")
+    try:
+        logger.info("Instance started/created.")
+    except Exception as e:
+        logger.error(f"Error during startup: {str(e)}")
 
 # Health check route
 @app.get("/health")
