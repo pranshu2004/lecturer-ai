@@ -1,8 +1,2 @@
 fastapi
 uvicorn[standard]
-python-multipart
-
-transformers
-sentencepiece
-
-faster-whisper
