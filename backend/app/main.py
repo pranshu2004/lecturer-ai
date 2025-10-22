@@ -1,8 +1,9 @@
 from fastapi import FastAPI, HTTPException, UploadFile
 import os
 import tempfile
+# --- We will NOT use the summarizer for this test ---
 from app.transcriber import transcribe_audio, load_model as load_transcriber_model
-from app.summarizer import summarize_text, load_model as load_summarizer_model
+# from app.summarizer import summarize_text, load_model as load_summarizer_model
 import logging
 
 # Initialize FastAPI app
@@ -12,9 +13,9 @@ logger = logging.getLogger(__name__)
 @app.on_event("startup")
 async def startup_event():
     """Load the ML models on server startup."""
-
     logger.info("Server starting up, loading models...")
-    load_summarizer_model()
+    # --- ONLY load the transcriber model ---
+    # load_summarizer_model() 
     load_transcriber_model()
     logger.info("Models loaded successfully.")
 
@@ -27,7 +28,6 @@ async def health_check():
 @app.post("/transcribe")
 async def transcribe_audio_endpoint(file: UploadFile):
     try:
-        # Save the uploaded file to a temporary path
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_file:
             temp_file.write(await file.read())
             temp_path = temp_file.name
@@ -35,13 +35,13 @@ async def transcribe_audio_endpoint(file: UploadFile):
         # Call the transcriber
         transcript = transcribe_audio(temp_path)
 
-        # Call the summarizer
-        summary = summarize_text(transcript)
+        # --- For this test, DO NOT call the summarizer ---
+        # summary = summarize_text(transcript)
+        summary = "Summary is currently disabled for testing." # Return a placeholder
 
-        # Clean up the temporary file
         os.remove(temp_path)
 
-        # Return the transcript and summary
+        # Return the transcript and a placeholder summary
         return {"transcript": transcript, "summary": summary}
 
     except RuntimeError as e:
@@ -49,6 +49,7 @@ async def transcribe_audio_endpoint(file: UploadFile):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to process the file: {str(e)}")
 
+# ... (rest of your routes are fine) ...
 @app.get("/")
 async def root():
     return {"message": "Welcome to the Audio Transcription and Summarization API"}

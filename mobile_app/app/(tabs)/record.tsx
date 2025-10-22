@@ -109,7 +109,7 @@ const RecordTab: React.FC<RecordTabProps> = ({ theme }) => {
         type: 'audio/wav',
       } as any); // Explicitly cast to 'any' to bypass type errors
 
-      const response = await fetch('http://10.109.11.14:8000/transcribe', {
+      const response = await fetch('https://lecturer-ai-402630883931.asia-south1.run.app/transcribe', {
         method: 'POST',
         body: formData,
         headers: {
