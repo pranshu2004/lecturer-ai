@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware # Import CORS
 import os
 import tempfile
 from app.transcriber import transcribe_audio, load_model as load_transcriber_model
@@ -9,6 +10,17 @@ import logging
 app = FastAPI()
 logger = logging.getLogger(__name__)
 
+# --- ADD THIS MIDDLEWARE SECTION ---
+# Allow all origins (for development)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+# --- END OF MIDDLEWARE SECTION ---
+
 @app.on_event("startup")
 async def startup_event():
     """Load all ML models on server startup."""
@@ -17,30 +29,22 @@ async def startup_event():
     load_transcriber_model()
     logger.info("All models loaded successfully.")
 
-# Health check route
+# ... (Rest of your app routes /health, /transcribe, etc. are unchanged) ...
+
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
 
-# Transcribe and summarize route
 @app.post("/transcribe")
 async def transcribe_audio_endpoint(file: UploadFile):
     try:
-        # Save the uploaded file to a temporary path
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_file:
             temp_file.write(await file.read())
             temp_path = temp_file.name
 
-        # Call the transcriber
         transcript = transcribe_audio(temp_path)
-
-        # Call the summarizer
         summary = summarize_text(transcript)
-
-        # Clean up the temporary file
         os.remove(temp_path)
-
-        # Return the transcript and summary
         return {"transcript": transcript, "summary": summary}
 
     except RuntimeError as e:
@@ -55,4 +59,3 @@ async def root():
 @app.get("/favicon.ico")
 async def favicon():
     return {"message": "Favicon not present for now."}
-
